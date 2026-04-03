@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.env
+*.db
+.pytest_cache/
+htmlcov/
+.coverage
+venv/
+.venv/
+generate_doc.py
+Finance_Backend_Documentation.docx
