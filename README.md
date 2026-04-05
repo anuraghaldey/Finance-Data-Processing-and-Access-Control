@@ -159,6 +159,16 @@ Client -> Rate Limiter -> JWT Auth -> RBAC -> Service Layer -> DB
                                           PostgreSQL
 ```
 
+### Multi-Worker Consistency
+
+Gunicorn runs 4 workers, each with its own in-memory DSA structures and L1 cache. Writes on any one worker are broadcast to the others via Redis Pub/Sub (`dsa:update` channel) — `app/utils/dsa_sync.py`:
+
+1. On write: the handling worker updates its local DSA, invalidates its local L1 + Redis L2 cache, then publishes a `{action, record}` event.
+2. Subscriber threads on the other workers apply the same DSA delta and clear their local L1 cache so subsequent reads recompute from the fresh tree.
+3. Safety net: every 30s each worker re-warms its DSA directly from PostgreSQL in case a Pub/Sub message was dropped.
+
+DB is the source of truth; in-memory state is eventually consistent (~1ms propagation).
+
 ## Testing
 
 ```bash
