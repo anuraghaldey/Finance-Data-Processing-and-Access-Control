@@ -106,6 +106,11 @@ def _apply_event(payload, origin_pid):
         get_segment_tree().remove_record(rec_date, amount, rec['type'])
         get_dashboard_topk().remove_record(rec['type'], rec['category'], amount)
 
+    # DSA updated — now drop this worker's L1 dashboard cache so the next
+    # read recomputes from the fresh tree instead of serving stale entries.
+    from app.utils.cache import dashboard_cache
+    dashboard_cache.clear()
+
 
 def _subscriber_loop(app):
     """Background thread: listens on Redis Pub/Sub and applies events."""
