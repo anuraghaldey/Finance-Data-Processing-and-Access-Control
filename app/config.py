@@ -41,7 +41,7 @@ class Config:
     RATELIMIT_STRATEGY = 'moving-window'
 
     # Super Admin seed
-    SUPER_ADMIN_EMAIL = os.getenv('SUPER_ADMIN_EMAIL', 'admin@finance.local')
+    SUPER_ADMIN_EMAIL = os.getenv('SUPER_ADMIN_EMAIL', 'superadmin@finance.local')
     SUPER_ADMIN_PASSWORD = os.getenv('SUPER_ADMIN_PASSWORD', 'SuperAdmin@123')
 
 
