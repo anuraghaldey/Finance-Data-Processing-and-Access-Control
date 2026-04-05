@@ -1,7 +1,11 @@
-from flask import jsonify
+from flask import jsonify, request
+from flask_jwt_extended import jwt_required
 
 from app.api.v1 import api_v1_bp
 from app.extensions import db, get_redis
+from app.middleware.rbac import role_required
+from app.middleware.rate_limiter import role_rate_limit
+from app.models.audit_log import AuditLog
 
 
 @api_v1_bp.route('/health', methods=['GET'])
@@ -38,6 +42,9 @@ def health_check():
 
 
 @api_v1_bp.route('/audit-logs', methods=['GET'])
+@jwt_required()
+@role_required('admin')
+@role_rate_limit
 def get_audit_logs():
     """Query audit trail. Admin+ only.
     ---
@@ -51,21 +58,6 @@ def get_audit_logs():
     responses:
       200: {description: Audit logs}
     """
-    from flask_jwt_extended import jwt_required, get_jwt
-    from app.middleware.rbac import role_required
-    from app.models.audit_log import AuditLog
-    from flask import request
-
-    # Manual auth check since we can't stack decorators in this pattern
-    from flask_jwt_extended import verify_jwt_in_request
-    try:
-        verify_jwt_in_request()
-        claims = get_jwt()
-        if claims.get('hierarchy_level', 0) < 4:
-            return jsonify({'error': 'Requires Admin role'}), 403
-    except Exception:
-        return jsonify({'error': 'Authentication required'}), 401
-
     query = AuditLog.query.order_by(AuditLog.timestamp.desc())
 
     user_id = request.args.get('user_id')

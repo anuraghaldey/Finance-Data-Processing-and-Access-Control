@@ -58,4 +58,11 @@ def create_app(config_name=None):
     with app.app_context():
         from app.models import user, role, permission, financial_record, audit_log, refresh_token, revoked_token  # noqa: F401
 
+    # DSA warm-up + cross-worker Pub/Sub sync.
+    # Skipped for testing config (tests manage their own DB lifecycle).
+    if not app.config.get('TESTING'):
+        from app.utils.dsa_sync import warm_up_dsas, start_background_sync
+        warm_up_dsas(app)
+        start_background_sync(app)
+
     return app

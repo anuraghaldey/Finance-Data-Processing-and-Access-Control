@@ -9,6 +9,7 @@ from app.utils.pagination import paginate_query
 from app.utils.analytics import get_segment_tree
 from app.utils.search import get_search_trie, tokenize_description
 from app.utils.top_k import get_dashboard_topk
+from app.utils.dsa_sync import publish_dsa_event
 
 
 def _update_dsa_on_add(record):
@@ -25,6 +26,9 @@ def _update_dsa_on_add(record):
     topk = get_dashboard_topk()
     topk.add_record(record.type, record.category, record.amount)
 
+    # Broadcast to other workers so their in-memory DSAs stay consistent
+    publish_dsa_event('add', record)
+
 
 def _update_dsa_on_remove(record):
     """Update DSA structures when a record is removed."""
@@ -33,6 +37,9 @@ def _update_dsa_on_remove(record):
 
     topk = get_dashboard_topk()
     topk.remove_record(record.type, record.category, record.amount)
+
+    # Broadcast to other workers
+    publish_dsa_event('remove', record)
 
 
 def _invalidate_caches():
