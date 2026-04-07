@@ -17,5 +17,7 @@ COPY . .
 # Expose port
 EXPOSE 5000
 
-# Run with Gunicorn
-CMD ["gunicorn", "-c", "gunicorn.conf.py", "run:app"]
+COPY start.sh .
+RUN chmod +x start.sh
+
+CMD ["./start.sh"]
