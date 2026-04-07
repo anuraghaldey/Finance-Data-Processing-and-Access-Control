@@ -1,4 +1,4 @@
-"""Tests for DSA warm-up + cross-worker Pub/Sub sync."""
+"""Tests for DSA warm-up and cross-worker sync."""
 import json
 from datetime import date
 from decimal import Decimal
@@ -178,7 +178,6 @@ class TestWarmUp:
 
             dsa_sync.warm_up_dsas(fake_app)
 
-        # Verify all three DSAs were populated
         tree = analytics.get_segment_tree()
         summary = tree.query_range(date(2026, 4, 1), date(2026, 4, 30))
         assert summary['income_sum'] == Decimal('1000')
@@ -247,7 +246,6 @@ class TestEndToEndSyncScenario:
         # --- Worker 2 side: apply (pretend we're a different PID) ---
         dsa_sync._apply_event(payload, origin_pid=-999)
 
-        # Worker 2's DSAs now reflect Worker 1's write
         tree = analytics.get_segment_tree()
         result = tree.query_range(date(2026, 4, 1), date(2026, 4, 30))
         assert result['expense_sum'] == Decimal('750.00')

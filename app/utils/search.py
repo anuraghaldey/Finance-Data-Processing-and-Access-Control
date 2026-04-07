@@ -1,14 +1,4 @@
-"""
-Trie (Prefix Tree) for search index autocomplete.
-
-Builds vocabulary from categories + tags + top description keywords.
-Provides O(k) prefix matching where k = query length.
-
-DB alternative (ILIKE 'prefix%') requires index scans and network
-roundtrips per keystroke. The Trie serves results from memory.
-
-Memory: capped at ~1500 vocabulary entries → ~500 KB worst case.
-"""
+"""Trie (Prefix Tree) for autocomplete over categories, tags, and keywords."""
 
 import re
 from collections import Counter
@@ -48,7 +38,6 @@ class SearchTrie:
         self._word_count = 0
 
     def insert(self, word, source='keyword'):
-        """Insert a word into the trie. O(k) where k = len(word)."""
         if not word or len(word) < 2:
             return
 
@@ -67,11 +56,7 @@ class SearchTrie:
         node.source = source
 
     def search_prefix(self, prefix, max_results=10):
-        """
-        Find all words matching a prefix. O(k + m) where k = prefix length,
-        m = number of results collected.
-        Returns list of {'word': str, 'source': str}.
-        """
+        """Find all words matching a prefix."""
         if not prefix:
             return []
 
@@ -90,7 +75,6 @@ class SearchTrie:
         return results
 
     def _collect(self, node, results, max_results):
-        """DFS to collect all complete words under a node."""
         if len(results) >= max_results:
             return
 
@@ -103,7 +87,7 @@ class SearchTrie:
             self._collect(node.children[char], results, max_results)
 
     def delete(self, word):
-        """Remove a word from the trie. O(k)."""
+        """Remove a word from the trie."""
         if not word:
             return False
         return self._delete(self.root, word.lower().strip(), 0)

@@ -1,13 +1,4 @@
-"""
-Cursor-based pagination.
-
-Uses keyset pagination instead of OFFSET for consistent O(1) performance
-regardless of page number. OFFSET-based pagination degrades with large
-offsets because the DB still scans skipped rows.
-
-Cursor is a base64-encoded string of the last item's sort key,
-allowing the next page to start exactly after it.
-"""
+"""Cursor-based (keyset) pagination."""
 
 import base64
 import json
@@ -39,7 +30,6 @@ def paginate_query(query, model, sort_by='created_at', sort_order='desc', cursor
     sort_col = getattr(model, sort_by, model.created_at)
     id_col = model.id
 
-    # Apply cursor filter
     cursor_data = decode_cursor(cursor)
     if cursor_data:
         cursor_value = cursor_data.get('value')
@@ -60,18 +50,15 @@ def paginate_query(query, model, sort_by='created_at', sort_order='desc', cursor
                 )
             )
 
-    # Apply sort
     if sort_order == 'desc':
         query = query.order_by(sort_col.desc(), id_col.asc())
     else:
         query = query.order_by(sort_col.asc(), id_col.asc())
 
-    # Fetch one extra to check if there are more
     items = query.limit(limit + 1).all()
     has_more = len(items) > limit
     items = items[:limit]
 
-    # Build next cursor
     next_cursor = None
     if has_more and items:
         last = items[-1]

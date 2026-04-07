@@ -13,7 +13,6 @@ from app.utils.dsa_sync import publish_dsa_event
 
 
 def _update_dsa_on_add(record):
-    """Update all in-memory DSA structures when a record is added."""
     tree = get_segment_tree()
     tree.add_record(record.date, Decimal(str(record.amount)), record.type)
 
@@ -26,24 +25,20 @@ def _update_dsa_on_add(record):
     topk = get_dashboard_topk()
     topk.add_record(record.type, record.category, record.amount)
 
-    # Broadcast to other workers so their in-memory DSAs stay consistent
     publish_dsa_event('add', record)
 
 
 def _update_dsa_on_remove(record):
-    """Update DSA structures when a record is removed."""
     tree = get_segment_tree()
     tree.remove_record(record.date, Decimal(str(record.amount)), record.type)
 
     topk = get_dashboard_topk()
     topk.remove_record(record.type, record.category, record.amount)
 
-    # Broadcast to other workers
     publish_dsa_event('remove', record)
 
 
 def _invalidate_caches():
-    """Invalidate L1 and L2 caches after a write."""
     from app.utils.cache import dashboard_cache
     dashboard_cache.clear()
 
@@ -59,7 +54,6 @@ def _invalidate_caches():
 
 
 def create_record(data, user_id):
-    """Create a financial record."""
     record = FinancialRecord(
         user_id=user_id,
         amount=Decimal(data['amount']),
@@ -86,10 +80,8 @@ def create_record(data, user_id):
 
 
 def get_records(filters):
-    """List financial records with filtering and cursor pagination."""
     query = FinancialRecord.query.filter(FinancialRecord.deleted_at.is_(None))
 
-    # Apply filters
     if filters.get('type'):
         query = query.filter(FinancialRecord.type == filters['type'])
     if filters.get('category'):
@@ -118,7 +110,6 @@ def get_records(filters):
 
 
 def get_record_by_id(record_id):
-    """Get a single record by ID."""
     record = FinancialRecord.query.get(record_id)
     if not record or record.is_deleted:
         raise NotFoundException('Financial record')
@@ -126,7 +117,6 @@ def get_record_by_id(record_id):
 
 
 def update_record(record_id, data):
-    """Update an existing financial record."""
     record = get_record_by_id(record_id)
 
     old_data = {
@@ -134,10 +124,8 @@ def update_record(record_id, data):
         'category': record.category, 'date': str(record.date),
     }
 
-    # Remove old values from DSA
     _update_dsa_on_remove(record)
 
-    # Apply updates
     for field in ['amount', 'type', 'category', 'date', 'description', 'tags', 'is_recurring']:
         if field in data and data[field] is not None:
             if field == 'amount':
@@ -153,7 +141,6 @@ def update_record(record_id, data):
               })
     db.session.commit()
 
-    # Re-add updated values to DSA
     _update_dsa_on_add(record)
     _invalidate_caches()
 
@@ -161,7 +148,6 @@ def update_record(record_id, data):
 
 
 def soft_delete_record(record_id):
-    """Soft delete a financial record."""
     record = get_record_by_id(record_id)
 
     _update_dsa_on_remove(record)
@@ -178,7 +164,6 @@ def soft_delete_record(record_id):
 
 
 def hard_delete_record(record_id):
-    """Permanently delete a financial record. Admin+ only."""
     record = FinancialRecord.query.get(record_id)
     if not record:
         raise NotFoundException('Financial record')
@@ -198,7 +183,6 @@ def hard_delete_record(record_id):
 
 
 def search_records(query_text, limit=10):
-    """Search records using Trie-based autocomplete."""
     trie = get_search_trie()
     suggestions = trie.search_prefix(query_text, max_results=limit)
     return suggestions

@@ -19,7 +19,6 @@ def get_users(cursor=None, limit=20):
 
 
 def get_user_by_id(user_id):
-    """Get a single user by ID."""
     user = User.query.get(user_id)
     if not user or user.is_deleted:
         raise NotFoundException('User')
@@ -78,7 +77,6 @@ def change_user_role(user_id, role_name, current_role_level):
 
 
 def update_user_status(user_id, is_active, current_user_id):
-    """Activate or deactivate a user."""
     user = get_user_by_id(user_id)
 
     if str(user.id) == str(current_user_id):
@@ -99,7 +97,6 @@ def update_user_status(user_id, is_active, current_user_id):
 
 
 def soft_delete_user(user_id, current_user_id):
-    """Soft delete a user."""
     user = get_user_by_id(user_id)
 
     if str(user.id) == str(current_user_id):
