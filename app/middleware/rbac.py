@@ -8,11 +8,7 @@ from app.models.permission import RolePermission
 
 
 def role_required(min_role):
-    """
-    Layer 1: Hierarchy-based access control.
-    Checks if the user's role hierarchy_level >= required level.
-    O(1) integer comparison.
-    """
+    """Hierarchy-based access control."""
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
@@ -27,7 +23,6 @@ def role_required(min_role):
                     'required_role': min_role,
                 }), 403
 
-            # Check if user is active
             if not claims.get('is_active', False):
                 return jsonify({'error': 'Account is deactivated'}), 403
 
@@ -37,11 +32,7 @@ def role_required(min_role):
 
 
 def permission_required(resource, action):
-    """
-    Layer 2: Fine-grained permission check.
-    Queries role_permissions table for specific resource+action.
-    Used for edge cases beyond hierarchy (e.g., hard_delete vs soft_delete).
-    """
+    """Fine-grained permission check for specific resource+action."""
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):

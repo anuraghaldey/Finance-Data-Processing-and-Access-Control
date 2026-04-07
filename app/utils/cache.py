@@ -1,14 +1,4 @@
-"""
-LRU Cache — L1 in-process cache (Doubly Linked List + HashMap).
-
-Sits in front of Redis (L2) to eliminate network latency for hot data.
-  - L1 read: ~50 nanoseconds (in-process memory)
-  - L2 read: ~0.5ms (Redis network roundtrip)
-
-Same pattern as Netflix (Guava + Redis), Uber (Caffeine + Redis).
-
-Memory: bounded by max_capacity (default 128 entries, ~640 KB).
-"""
+"""LRU Cache — L1 in-process cache sitting in front of Redis (L2)."""
 
 
 class _DLLNode:
@@ -23,14 +13,7 @@ class _DLLNode:
 
 
 class LRUCache:
-    """
-    Least Recently Used cache using a doubly linked list + hashmap.
-
-    - get(key): O(1) — returns value and moves to front (most recent)
-    - put(key, value): O(1) — inserts at front, evicts LRU if at capacity
-    - invalidate(key): O(1) — removes a specific key
-    - clear(): O(1) — removes all entries
-    """
+    """Least Recently Used cache using a doubly linked list + hashmap."""
 
     def __init__(self, max_capacity=128):
         self.capacity = max_capacity
@@ -43,7 +26,7 @@ class LRUCache:
         self.tail.prev = self.head
 
     def get(self, key):
-        """Retrieve value and promote to most-recently-used. O(1)."""
+        """Retrieve value and promote to most-recently-used."""
         if key not in self.cache:
             return None
 
@@ -52,7 +35,7 @@ class LRUCache:
         return node.value
 
     def put(self, key, value):
-        """Insert or update a key-value pair. O(1)."""
+        """Insert or update a key-value pair."""
         if key in self.cache:
             node = self.cache[key]
             node.value = value
@@ -68,14 +51,14 @@ class LRUCache:
         self._add_to_front(node)
 
     def invalidate(self, key):
-        """Remove a specific key. O(1)."""
+        """Remove a specific key."""
         if key not in self.cache:
             return
         node = self.cache.pop(key)
         self._remove(node)
 
     def clear(self):
-        """Remove all entries. O(1)."""
+        """Remove all entries."""
         self.cache.clear()
         self.head.next = self.tail
         self.tail.prev = self.head
@@ -110,5 +93,4 @@ class LRUCache:
         del self.cache[lru.key]
 
 
-# Singleton L1 cache for dashboard data
 dashboard_cache = LRUCache(max_capacity=128)

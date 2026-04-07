@@ -1,18 +1,4 @@
-"""
-Segment Tree with Lazy Propagation for range analytics.
-
-Indexed by date (day granularity). Each node stores:
-  - total_sum, income_sum, expense_sum
-  - max_transaction, min_transaction
-  - count
-
-Supports:
-  - O(log n) point updates when a record is added/updated/deleted
-  - O(log n) range queries for any date range (sum, min, max, count)
-  - O(log n) range updates with lazy propagation (e.g., bulk adjustments)
-
-Memory: ~4n nodes where n = number of days in range. For 10 years: ~700 KB.
-"""
+"""Segment Tree with Lazy Propagation for date-range financial analytics."""
 
 from datetime import date, timedelta
 from decimal import Decimal
@@ -47,12 +33,10 @@ class FinanceSegmentTree:
         self.tree = [SegmentTreeNode() for _ in range(4 * self.n)]
 
     def _date_to_index(self, d):
-        """Convert a date to an array index."""
         delta = (d - self.start_date).days
         return max(0, min(delta, self.n - 1))
 
     def _merge(self, left, right, target):
-        """Merge two child nodes into a parent."""
         target.total_sum = left.total_sum + right.total_sum
         target.income_sum = left.income_sum + right.income_sum
         target.expense_sum = left.expense_sum + right.expense_sum
@@ -61,7 +45,6 @@ class FinanceSegmentTree:
         target.count = left.count + right.count
 
     def _push_down(self, node):
-        """Propagate lazy factor to children."""
         factor = self.tree[node].lazy_factor
         if factor != Decimal('1'):
             for child in [2 * node, 2 * node + 1]:
@@ -76,12 +59,10 @@ class FinanceSegmentTree:
             self.tree[node].lazy_factor = Decimal('1')
 
     def add_record(self, record_date, amount, record_type):
-        """Add a financial record. O(log n)."""
         idx = self._date_to_index(record_date)
         self._update(1, 0, self.n - 1, idx, amount, record_type, is_add=True)
 
     def remove_record(self, record_date, amount, record_type):
-        """Remove a financial record. O(log n)."""
         idx = self._date_to_index(record_date)
         self._update(1, 0, self.n - 1, idx, amount, record_type, is_add=False)
 
@@ -117,10 +98,7 @@ class FinanceSegmentTree:
         self._merge(self.tree[2 * node], self.tree[2 * node + 1], self.tree[node])
 
     def query_range(self, from_date, to_date):
-        """
-        Query aggregated data for a date range. O(log n).
-        Returns dict with total_sum, income_sum, expense_sum, max_txn, min_txn, count.
-        """
+        """Query aggregated data for a date range."""
         l_idx = self._date_to_index(from_date)
         r_idx = self._date_to_index(to_date)
         result = SegmentTreeNode()
@@ -160,11 +138,7 @@ class FinanceSegmentTree:
         self._query(2 * node + 1, mid + 1, end, l, r, result)
 
     def range_update(self, from_date, to_date, factor):
-        """
-        Bulk adjustment: multiply all values in range by factor. O(log n).
-        Uses lazy propagation to defer updates to children.
-        Example: apply 10% tax correction → factor=1.10
-        """
+        """Bulk-multiply all values in a date range by factor (e.g. 1.10 for 10% adjustment)."""
         l_idx = self._date_to_index(from_date)
         r_idx = self._date_to_index(to_date)
         self._range_update(1, 0, self.n - 1, l_idx, r_idx, Decimal(str(factor)))

@@ -185,6 +185,26 @@ pytest tests/unit/
 pytest tests/integration/
 ```
 
+## Live Demo
+
+- **Backend API + Swagger Docs:** https://finance-backend-api.onrender.com/apidocs
+- **Frontend Dashboard:** https://anuraghaldey.github.io/Finance-Data-Processing-and-Access-Control/Frontend-For-Testing/
+
+> Note: The Render free tier spins down after 15 minutes of inactivity. The first request may take 30-60 seconds to cold-start.
+
+### How to Test the Live Demo
+
+1. Open the **Frontend Dashboard** link above.
+2. Click **Super Admin** quick-login button (credentials: `superadmin@finance.local` / `SuperAdmin@123`).
+3. Explore:
+   - **Dashboard** — summary cards, category breakdown, monthly trends with visual bars.
+   - **Records** — create income/expense records, filter by type/category/date, use search autocomplete.
+   - **Users** — manage users, change roles, activate/deactivate accounts.
+   - **Audit Logs** — view all system activity filtered by action/resource type.
+   - **Health** — check backend + database + Redis status.
+4. To test role-based access: register a new user (gets Viewer role by default), login, and notice restricted features.
+5. To test the API directly: open the **Swagger Docs** link and use the Authorize button with a JWT token.
+
 ## Assumptions
 
 1. Single-tenant system (one org per deployment)

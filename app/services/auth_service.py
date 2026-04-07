@@ -14,7 +14,6 @@ from app.errors.exceptions import (
 
 
 def _build_jwt_claims(user):
-    """Build additional JWT claims from user data."""
     return {
         'role': user.role.name,
         'role_id': user.role.id,
@@ -25,7 +24,6 @@ def _build_jwt_claims(user):
 
 
 def register_user(data):
-    """Register a new user with default Viewer role."""
     if User.query.filter_by(email=data['email']).first():
         raise ConflictException('Email already registered')
     if User.query.filter_by(username=data['username']).first():
@@ -51,7 +49,6 @@ def register_user(data):
 
 
 def login_user(data):
-    """Authenticate user and return JWT tokens."""
     user = User.query.filter_by(email=data['email']).first()
 
     if not user or not user.check_password(data['password']):
@@ -137,7 +134,6 @@ def refresh_tokens(user_id, token_jti):
 
 
 def logout_user(access_jti, access_exp, refresh_jti=None):
-    """Revoke access token (blocklist) and refresh token."""
     r = get_redis()
     exp_time = datetime.fromtimestamp(access_exp, tz=timezone.utc)
     ttl = int((exp_time - datetime.now(timezone.utc)).total_seconds())

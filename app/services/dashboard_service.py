@@ -1,12 +1,4 @@
-"""
-Dashboard service — aggregated analytics endpoints.
-
-Layered caching strategy:
-  1. L1: LRU Cache (in-process, ~50ns)
-  2. L2: Redis (shared, ~0.5ms)
-  3. In-memory DSA (Segment Tree, Min-Heap)
-  4. PostgreSQL (fallback, full query)
-"""
+"""Dashboard service — aggregated analytics endpoints."""
 
 import json
 from datetime import date, timedelta
@@ -65,10 +57,7 @@ def _cache_set(key, value, ttl=300):
 
 
 def get_summary(date_from=None, date_to=None):
-    """
-    Dashboard summary: total income, expenses, net balance, count, average.
-    Uses Segment Tree for O(log n) range queries.
-    """
+    """Dashboard summary: total income, expenses, net balance, count, average."""
     if date_from is None:
         date_from = date(2020, 1, 1)
     if date_to is None:
@@ -79,7 +68,6 @@ def get_summary(date_from=None, date_to=None):
     if cached:
         return cached
 
-    # Try Segment Tree first
     tree = get_segment_tree()
     data = tree.query_range(date_from, date_to)
 
@@ -141,7 +129,7 @@ def _summary_from_db(date_from, date_to):
 
 
 def get_category_breakdown(date_from=None, date_to=None):
-    """Category-wise totals with top categories from Min-Heap."""
+    """Category-wise totals with top categories."""
     if date_from is None:
         date_from = date(2020, 1, 1)
     if date_to is None:
@@ -178,7 +166,6 @@ def get_category_breakdown(date_from=None, date_to=None):
             'count': row.count,
         })
 
-    # Top categories from Min-Heap (O(1))
     topk = get_dashboard_topk()
     result = {
         'categories': categories,
@@ -215,7 +202,6 @@ def get_trends(period='monthly', months=6):
 
 
 def _monthly_trends(today, months):
-    """Compute monthly trends using Segment Tree for each month."""
     tree = get_segment_tree()
     trends = []
 
@@ -246,7 +232,6 @@ def _monthly_trends(today, months):
 
 
 def _weekly_trends(today, weeks):
-    """Compute weekly trends using Segment Tree."""
     tree = get_segment_tree()
     trends = []
 

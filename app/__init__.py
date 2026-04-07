@@ -16,7 +16,6 @@ def create_app(config_name=None):
     app = Flask(__name__)
     app.config.from_object(config_by_name[config_name])
 
-    # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
@@ -47,19 +46,14 @@ def create_app(config_name=None):
         from app.models.revoked_token import RevokedToken
         return RevokedToken.is_revoked(jti)
 
-    # Register error handlers
     register_error_handlers(app)
 
-    # Register blueprints
     from app.api.v1 import api_v1_bp
     app.register_blueprint(api_v1_bp, url_prefix='/api/v1')
 
-    # Import models for migrations
     with app.app_context():
         from app.models import user, role, permission, financial_record, audit_log, refresh_token, revoked_token  # noqa: F401
 
-    # DSA warm-up + cross-worker Pub/Sub sync.
-    # Skipped for testing config (tests manage their own DB lifecycle).
     if not app.config.get('TESTING'):
         from app.utils.dsa_sync import warm_up_dsas, start_background_sync
         warm_up_dsas(app)
